@@ -1,0 +1,40 @@
+## Visual Studio / ASP.NET Core
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build output
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+[Aa]rtifacts/
+x64/
+x86/
+
+# Visual Studio cache
+.vs/
+.vscode
+
+# Test results
+TestResults/
+*.trx
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+
+# ASP.NET generated/static assets
+wwwroot/lib/
+wwwroot/dist/
+
+# OS files
+.DS_Store
+Thumbs.db

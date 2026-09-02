@@ -1,0 +1,1 @@
+namespace HabitTracker.Domain.Enums;
