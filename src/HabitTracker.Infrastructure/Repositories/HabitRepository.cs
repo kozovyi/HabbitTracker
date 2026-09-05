@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HabitTracker.Infrastructure.Repositories;
 
-public sealed class HabitRepository(ApplicationDbContext db) : IHabitRerository
+public sealed class HabitRepository(ApplicationDbContext db) : IHabitRepository
 {
 	private readonly ApplicationDbContext _dbContext = db ?? throw new ArgumentNullException(nameof(db));
 

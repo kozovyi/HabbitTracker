@@ -13,8 +13,7 @@ public class HabitConfiguration : IEntityTypeConfiguration<Habit>
 
         builder.Property(h => h.Title)
             .HasMaxLength(150)
-            .IsRequired()
-            .HasMaxLength(200);
+            .IsRequired();
 
         builder.Property(h => h.Description)
             .HasMaxLength(1000);

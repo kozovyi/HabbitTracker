@@ -3,7 +3,7 @@ using HabitTracker.Domain.Entities;
 
 namespace HabitTracker.Application.Interfaces;
 
-public interface IHabitRerository
+public interface IHabitRepository
 {
     void Update(Habit habit);
     void Remove(Habit habit);
