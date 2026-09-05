@@ -9,14 +9,12 @@ public class Habit
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public int TargetDaysPerWeek { get; set; }
-    public Frequency Frequency { get; set; } = Frequency.Daily;
     public HabitStatus Status { get; set; } = HabitStatus.Active;
-    public DateTime CreatedAtUtc { get; set; }
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public Guid UserId { get; set; }
 
     public required User User { get; set; }
     public HabitReminder? HabitReminder { get; set; }
-    public List<HabitLog> Logs { get; set; } = new();
     public List<HabitRecord> Records { get; set; } = new();
 
 }
