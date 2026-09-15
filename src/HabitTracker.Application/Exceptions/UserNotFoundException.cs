@@ -1,9 +1,9 @@
 namespace HabitTracker.Application.Exceptions;
 
-public class UserNotFoundException : Exception
+public sealed class UserNotFoundException : AppException
 {
     public UserNotFoundException(string email)
-        : base($"User with email '{email}' was not found.")
+        : base($"User with email '{email}' was not found.", errorType: ErrorType.NotFound)
     {
         Email = email;
     }

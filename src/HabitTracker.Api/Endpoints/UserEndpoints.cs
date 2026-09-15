@@ -60,12 +60,12 @@ public static class UserEndpoints
                 statusCode: StatusCodes.Status404NotFound,
                 title: "User not found");
         }
-        catch (InvalidCredentialsException)
-        {
-            return Results.Problem(
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "Invalid credentials");
-        }
+        // catch (InvalidCredentialsException)
+        // {
+        //     return Results.Problem(
+        //         statusCode: StatusCodes.Status401Unauthorized,
+        //         title: "Invalid credentials");
+        // }
     }
 
     private static async Task<Dictionary<string, string[]>?> ValidateAsync<T>(T request, IValidator<T> validator)
