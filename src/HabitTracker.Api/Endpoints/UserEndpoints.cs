@@ -1,8 +1,6 @@
 using FluentValidation;
 using HabitTracker.Application.DTOs;
-using HabitTracker.Application.Exceptions;
 using HabitTracker.Application.Services;
-using HabitTracker.Infrastructure.Repositories;
 
 namespace HabitTracker.Api.Endpoints;
 
@@ -11,75 +9,65 @@ public static class UserEndpoints
 {
     public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("register", Register);   
-        app.MapPost("login", Login).RequireAuthorization();
-
+        var group = app.MapGroup("/auth");
+        group.MapPost("/register", Register);
+        group.MapPost("/login", Login);
+        group.MapPost("/me", Me).RequireAuthorization();
         return app;
     }
-    
+
+    private static async Task<IResult?> ValidateAsync<T>(T request, IValidator<T> validator)
+    {
+        var result = await validator.ValidateAsync(request);
+        return result.IsValid
+            ? null
+            : Results.ValidationProblem(result.Errors.GroupBy(error => error.PropertyName).ToDictionary(group => group.Key, group => group.Select(error => error.ErrorMessage).ToArray()));   
+    }
+
     private static async Task<IResult> Register(
         RegisterUserDto request,
+        UserService userService,
         IValidator<RegisterUserDto> validator,
-        UserService userService)
+        CancellationToken cancellationToken)
     {
-        var validationErrors = await ValidateAsync(request, validator);
-        if (validationErrors is not null)
-            return Results.ValidationProblem(validationErrors);
+        var validationError = await ValidateAsync(request, validator);
+        if (validationError != null) return validationError;
+        
+        var (user, result) = await userService.Register(email:request.Email.Trim(), request.Password);
+        if (!result.Succeeded)
+            {
+                var errors = result.Errors
+                    .GroupBy(e => e.Code)
+                    .ToDictionary(g => g.Key, g => g.Select(e => e.Description).ToArray());
 
-        await userService.Register(request.Username, request.Email, request.Password);
-        return Results.Ok();
+                return Results.ValidationProblem(errors);
+            }
+
+        return Results.Created($"/auth/users/{user!.Id}", new UserResponseDto(user.Id, user.Email!, user.UserName!));
     }
 
     private static async Task<IResult> Login(
         LoginUserDto request,
         IValidator<LoginUserDto> validator,
-        UserService userService,
-        HttpContext context)
+        UserService userService)
     {
         var validationErrors = await ValidateAsync(request, validator);
         if (validationErrors is not null)
-            return Results.ValidationProblem(validationErrors);
+            return validationErrors;
 
-        try
-        {
-            var token = await userService.Login(request.Email, request.Password);
-            context.Response.Cookies.Append("__Host-access_token", token, new CookieOptions
-            {
-                HttpOnly = true,                   
-                Secure = true,                           
-                SameSite = SameSiteMode.Strict,         
-                Expires = DateTimeOffset.UtcNow.AddMinutes(15),
-                Path = "/"
-            });
-            return Results.Ok(token);
+        var (user, token) = await userService.Login(request.Email.Trim(), request.Password);
+        if (user is null || token is null)
+            return Results.Unauthorized();
 
-        }
-        catch (UserNotFoundException)
-        {
-            return Results.Problem(
-                statusCode: StatusCodes.Status404NotFound,
-                title: "User not found");
-        }
-        // catch (InvalidCredentialsException)
-        // {
-        //     return Results.Problem(
-        //         statusCode: StatusCodes.Status401Unauthorized,
-        //         title: "Invalid credentials");
-        // }
+        return Results.Ok(new AuthResponseDto(token, new UserResponseDto(user.Id, user.Email!, user.UserName!)));
     }
 
-    private static async Task<Dictionary<string, string[]>?> ValidateAsync<T>(T request, IValidator<T> validator)
+    private static IResult Me(HttpContext context) => Results.Ok(new
     {
-        var result = await validator.ValidateAsync(request);
-        if (result.IsValid)
-            return null;
-
-        return result.Errors
-            .GroupBy(error => error.PropertyName)
-            .ToDictionary(
-                group => group.Key,
-                group => group.Select(error => error.ErrorMessage).ToArray());
-    }
-
+        UserId = context.User.FindFirst("userId")?.Value,
+        Email = context.User.FindFirst(System.Security.Claims.ClaimValueTypes.Email)?.Value,
+        Username = context.User.Identity?.Name,
+        Roles = context.User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(claim => claim.Value)
+    });
 
 }

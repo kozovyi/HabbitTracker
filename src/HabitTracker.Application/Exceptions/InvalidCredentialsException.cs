@@ -1,19 +1,10 @@
 namespace HabitTracker.Application.Exceptions;
 
-// public sealed class InvalidCredentialsException : AppException
-// {
-//     public InvalidCredentialsException() 
-//         : base("Invalid email or password.")
-//     {
-//     }
-
-//     public InvalidCredentialsException(string message) 
-//         : base(message)
-//     {
-//     }
-
-//     public InvalidCredentialsException(string message, Exception innerException) 
-//         : base(message, innerException)
-//     {
-//     }
-// }
+public sealed class InvalidCredentialsException : AppException
+{
+    public InvalidCredentialsException(
+        string message = "Invalid email or password.")
+        : base(message, ErrorType.Unauthorized)
+    {
+    }
+}

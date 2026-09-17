@@ -4,5 +4,5 @@ namespace HabitTracker.Application.Interfaces;
 
 public interface IJwtGenerator
 {
-    public string CreateJwt(User user);
+    string CreateJwt(User user, IEnumerable<string> roles);
 }

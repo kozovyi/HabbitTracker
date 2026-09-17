@@ -3,46 +3,46 @@ using System.Runtime.CompilerServices;
 using HabitTracker.Application.Exceptions;
 using HabitTracker.Application.Interfaces;
 using HabitTracker.Domain.Entities;
+using HabitTracker.Domain.Enums;
+using Microsoft.AspNetCore.Identity;
 
 namespace HabitTracker.Application.Services;
 
 public class UserService
 {
-	private readonly IUserRepository _userRepository;
-	private readonly IPasswordHasher _passwordHasher;
-	private readonly IJwtGenerator _jwtGenerator;
+	private readonly UserManager<User> userManager;
+	private readonly IJwtGenerator jwtGenerator;
 
-	public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher, IJwtGenerator jwtGenerator)
+	public UserService(UserManager<User> userManager, IJwtGenerator jwtGenerator)
 	{
-		_userRepository = userRepository; 
-		_passwordHasher = passwordHasher; 
-		_jwtGenerator = jwtGenerator; 
+		this.userManager = userManager;
+		this.jwtGenerator = jwtGenerator;
 	}
 
-	public async Task Register(string username, string email, string password)
+	public async Task<(User?, IdentityResult)> Register(string email, string password)
 	{
-		if (await _userRepository.ExistsByEmailAsync(email))
+        var user = new User(email, password);
+		var result = await userManager.CreateAsync(user, password);
+		if (!result.Succeeded)
 		{
-			throw new DuplicateUserEmailException(email);
-		}
-		var hashedPassword = _passwordHasher.Generate(password);
-		var user = User.Create(email, username, hashedPassword);
-
-		await _userRepository.AddAsync(user);
-		await _userRepository.SaveChangesAsync();
+            return (null, result);
+        }
+		await userManager.AddToRoleAsync(user, Roles.User.ToString());
+		return (user, result);
 	}
 
-	public async Task<string> Login(string email, string password)
+	
+	public async Task<(User? User, string? Token)> Login(string email, string password)
 	{
-		var user = await _userRepository.GetByEmailAsync(email)
-			?? throw new UserNotFoundException(email);
-		
-		var isValidPassword = _passwordHasher.Verify(password, user.PasswordHash);
-		// if (!isValidPassword)
-		// 	throw new InvalidCredentialsException();
+		var user = await userManager.FindByEmailAsync(email);
+		if (user is null || !await userManager.CheckPasswordAsync(user, password))
+		{
+			return (null, null);
+		}
 
-		var token = _jwtGenerator.CreateJwt(user);
-		return token;
+		var roles = await userManager.GetRolesAsync(user);
+		var token = jwtGenerator.CreateJwt(user, roles);
+		return (user, token);
 	}
 
 

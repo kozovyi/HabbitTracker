@@ -19,7 +19,7 @@ public sealed class HabitRecordRepository(ApplicationDbContext db) : IHabitRecor
         db.HabitRecords
             .AsNoTracking()
             .Where(record => record.HabitId == habitId)
-            .OrderBy(record => record.ComplatedAtUtc)
+            .OrderBy(record => record.CompletedAtUtc)
             .ToListAsync(cancellationToken);
 
     public Task<List<HabitRecord>> GetByHabitIdForPeriodAsync(
@@ -30,9 +30,9 @@ public sealed class HabitRecordRepository(ApplicationDbContext db) : IHabitRecor
         db.HabitRecords
             .AsNoTracking()
             .Where(record => record.HabitId == habitId
-                        && record.ComplatedAtUtc >= fromUtc
-                        && record.ComplatedAtUtc <= toUtc)
-            .OrderBy(record => record.ComplatedAtUtc)
+                        && record.CompletedAtUtc >= fromUtc
+                        && record.CompletedAtUtc <= toUtc)
+            .OrderBy(record => record.CompletedAtUtc)
             .ToListAsync(cancellationToken);
 
     public void Remove(HabitRecord habitRecord)
